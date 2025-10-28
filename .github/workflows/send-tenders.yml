@@ -1,9 +1,9 @@
-# .github/workflows/send-tenders.yml
-name: Send Daily Tenders
+# .github/workflows/send-daily-from-email.yml
+name: Send Daily Tenders (Email→Telegram)
 
 on:
   schedule:
-    - cron: '0 * * * *'   # هر ساعت (UTC)؛ داخل کد اگر گارد 9 صبح داری، فقط همان موقع ارسال می‌شود
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -27,8 +27,12 @@ jobs:
           pip install requests
 
       - name: Run
-        run: python send_tenders.py
+        run: python pull_and_send_from_email.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           GROUP_ID: ${{ secrets.GROUP_ID }}
-          # اگر این اسکریپت به ایمیل/IMAP نیاز ندارد، چیزی اضافه نکن
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}          # imap-mail.outlook.com یا imap.gmail.com
+          IMAP_FROM: ${{ secrets.IMAP_FROM }}          # اختیاری
+          IMAP_SUBJECT_KEY: DAILY_TENDERS_JSON
