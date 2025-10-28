@@ -1,3 +1,16 @@
+- name: Test POP login
+  run: |
+    python - <<'PY'
+    import os, poplib
+    host=os.environ['IMAP_HOST']; user=os.environ['IMAP_USER']; pw=os.environ['IMAP_PASS']
+    P=poplib.POP3_SSL(host,995,timeout=30); P.user(user); P.pass_(pw)
+    c,_=P.stat(); print("✅ POP login OK, messages:", c); P.quit()
+    PY
+  env:
+    IMAP_HOST: ${{ env.IMAP_HOST }}
+    IMAP_USER: ${{ env.IMAP_USER }}
+    IMAP_PASS: ${{ env.IMAP_PASS }}
+
 name: Send Daily Tenders (Email→Telegram)
 
 on:
