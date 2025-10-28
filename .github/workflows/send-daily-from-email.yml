@@ -2,44 +2,52 @@ name: Send Daily Tenders (Email→Telegram)
 
 on:
   schedule:
-    - cron: '0 * * * *'   # هر ساعت (UTC)؛ اسکریپت فقط 09:00 پاریس ارسال می‌کند
+    - cron: '0 * * * *'   # هر ساعت (UTC)؛ خود اسکریپت فقط 09:00 Europe/Paris ارسال می‌کند
   workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
 
+    # متغیرها را از Secrets (یا Variables اگر بعداً خواستی) می‌خوانیم
     env:
-      IMAP_HOST: ${{ secrets.IMAP_HOST }}
-      IMAP_USER: ${{ secrets.IMAP_USER }}
-      IMAP_PASS: ${{ secrets.IMAP_PASS }}
-      BOT_TOKEN:  ${{ secrets.BOT_TOKEN }}
-      GROUP_ID:   ${{ secrets.GROUP_ID }}
-      IMAP_FROM:  ${{ secrets.IMAP_FROM }}
-      IMAP_SUBJECT_KEY: DAILY_TENDERS_JSON
-      SEND_ERRORS_TO_CHAT: "1"
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}        # مثلا: outlook.office365.com
+      IMAP_USER: ${{ secrets.IMAP_USER }}        # مثلا: sakhtmoon@outlook.com (Primary alias)
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}        # پسورد اکانت Outlook
+      BOT_TOKEN:  ${{ secrets.BOT_TOKEN }}       # توکن ربات تلگرام
+      GROUP_ID:   ${{ secrets.GROUP_ID }}        # آیدی عددی گروه (معمولا -100...)
+      IMAP_FROM:  ${{ secrets.IMAP_FROM }}       # اختیاری
+      IMAP_SUBJECT_KEY: DAILY_TENDERS_JSON       # عنوان ایمیل تسک
+      SEND_ERRORS_TO_CHAT: "1"                   # اگر نمی‌خوای پیام خطا داخل گروه بره، "0"
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      # اختیاری: تست ورود POP برای اطمینان
-      - name: Test POP login
+      # --- اختیاری ولی توصیه‌شده: تست ورود POP قبل از اجرای اصلی ---
+      - name: POP login deep-check
         run: |
           python - <<'PY'
-          import os, poplib
-          host=os.environ['IMAP_HOST']; user=os.environ['IMAP_USER']; pw=os.environ['IMAP_PASS']
-          P=poplib.POP3_SSL(host,995,timeout=30); P.user(user); P.pass_(pw)
-          c,_=P.stat(); print("✅ POP login OK, messages:", c); P.quit()
+          import os, poplib, sys
+          user=os.environ['IMAP_USER']; pw=os.environ['IMAP_PASS']
+          for host in ('outlook.office365.com','pop-mail.outlook.com'):
+            try:
+              P=poplib.POP3_SSL(host,995,timeout=30); P.user(user); P.pass_(pw)
+              c,_=P.stat(); print(f"✅ POP OK on {host}, messages:", c); P.quit(); sys.exit(0)
+            except Exception as e:
+              print(f"❌ POP failed on {host}: {e}")
+          sys.exit(1)
           PY
 
-      - name: Run
+      - name: Run bot
         run: python pull_and_send_from_email.py
