@@ -1,6 +1,7 @@
 import os
 from telegram import Bot
 
+# به هیچ وجه توکن و آی‌دی گروه را دستی در کد ننویس!
 TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["GROUP_ID"]
 
@@ -40,5 +41,4 @@ def send_report():
     bot = Bot(token=TOKEN)
     bot.send_message(chat_id=CHAT_ID, text=report)
 
-# اجرای یک بار (کاری به schedule نداریم چون توسط GitHub Action زمان‌بندی می‌شود)
 send_report()
