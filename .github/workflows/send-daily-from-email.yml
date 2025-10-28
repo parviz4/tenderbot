@@ -2,14 +2,13 @@ name: Send Daily Tenders (Email→Telegram)
 
 on:
   schedule:
-    - cron: '0 * * * *'   # هر ساعت (UTC)؛ داخل اسکریپت می‌توانی گارد ۹ صبح پاریس داشته باشی
+    - cron: '0 * * * *'   # هر ساعت (UTC)؛ اسکریپت فقط 09:00 پاریس ارسال می‌کند
   workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
 
-    # ⬇️ سکرت‌ها را یک‌بار در سطح job ست می‌کنیم تا همه‌ی steps ببینند
     env:
       IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
       IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
@@ -18,14 +17,10 @@ jobs:
       GROUP_ID:   ${{ secrets.GROUP_ID   || vars.GROUP_ID   }}
       IMAP_FROM:  ${{ secrets.IMAP_FROM  || vars.IMAP_FROM  }}
       IMAP_SUBJECT_KEY: DAILY_TENDERS_JSON
+      SEND_ERRORS_TO_CHAT: "1"
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Show repo tree
-        run: |
-          pwd
-          ls -la
 
       - uses: actions/setup-python@v5
         with:
@@ -40,12 +35,8 @@ jobs:
         run: |
           echo "Checking required envs..."
           miss=0
-          for name in IMAP_HOST IMAP_USER IMAP_PASS BOT_TOKEN GROUP_ID IMAP_SUBJECT_KEY; do
-            if [ -z "${!name}" ]; then
-              echo "❌ MISSING: $name"; miss=1
-            else
-              echo "✅ $name is set"
-            fi
+          for name in IMAP_HOST IMAP_USER IMAP_PASS BOT_TOKEN GROUP_ID; do
+            if [ -z "${!name}" ]; then echo "❌ MISSING: $name"; miss=1; else echo "✅ $name is set"; fi
           done
           test "$miss" -eq 0
 
