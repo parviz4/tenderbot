@@ -16,7 +16,7 @@ jobs:
           python-version: 3.11
       - name: Install dependencies
         run: |
-          pip install python-telegram-bot requests
+          pip install python-telegram-bot requests schedule
       - name: Run script
         run: python send_tenders.py
         env:
