@@ -1,25 +1,24 @@
-import requests
+import os
 from telegram import Bot
-import schedule
-import time
 
-# اطلاعات ربات و گروه
-TOKEN = "8220240222:AAFgyAsiCwUooeWwxKDNwzCsohdCIE8SFx8"
-CHAT_ID = "@rasta3_group"
-
-# آدرس سرویسی که دیتا را برمی‌گرداند (خروجی من یا سرویس پایدار عمومی)
-TENDERS_URL = "https://api.my-comet-ai.ir/daily-tenders"  # اگر api اختصاصی از من داشته باشی این قسمت قرار می‌گیرد
+TOKEN = os.environ["BOT_TOKEN"]
+CHAT_ID = os.environ["GROUP_ID"]
 
 def get_tenders():
-    # درخواست به سرویس دریافت دیتا
-    resp = requests.get(TENDERS_URL)
-    if resp.status_code == 200:
-        try:
-            tenders = resp.json()  # خروجی باید لیست دیکشنری باشد (مثل نمونه قبلی)
-            return tenders
-        except:
-            return []
-    return []
+    return [
+        {
+            "title": "نمونه مناقصه تستی",
+            "company": "شرکت نمونه",
+            "deadline": "۶ آبان",
+            "short_link": "https://b2n.ir/test"
+        },
+        {
+            "title": "مناقصه دوم",
+            "company": "شرکت دوم",
+            "deadline": "۷ آبان",
+            "short_link": "https://yun.ir/test2"
+        }
+    ]
 
 def make_report(tender_list):
     header = "🚩 اطلاعیه ویژه مناقصات عمرانی و ژئوتکنیک 🚩\n\n"
@@ -29,7 +28,7 @@ def make_report(tender_list):
         body += f"🏢 {tender['company']}\n"
         body += f"📆 مهلت ثبت‌نام: {tender['deadline']}\n"
         body += f"🔗 لینک: {tender['short_link']}\n\n"
-    footer = f"💬 جهت دریافت روزانه: @rasta3_group\n🌐 پلتفرم ارجاع تخصصی پروژه‌های مهندسی: rastaworks.ir"
+    footer = f"💬 جهت دریافت روزانه: {CHAT_ID}\n🌐 پلتفرم ارجاع تخصصی پروژه‌های مهندسی: rastaworks.ir"
     return header + body + footer
 
 def send_report():
@@ -41,13 +40,5 @@ def send_report():
     bot = Bot(token=TOKEN)
     bot.send_message(chat_id=CHAT_ID, text=report)
 
-# ارسال یکبار الان
+# اجرای یک بار (کاری به schedule نداریم چون توسط GitHub Action زمان‌بندی می‌شود)
 send_report()
-
-# زمان‌بندی روزانه برای ارسال خودکار (هر روز ساعت ۹ صبح)
-schedule.every().day.at("09:00").do(send_report)
-
-# حلقه اجرا
-while True:
-    schedule.run_pending()
-    time.sleep(60)
