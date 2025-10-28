@@ -1,0 +1,24 @@
+name: Send Daily Tenders
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  send-tenders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
+      - name: Install dependencies
+        run: |
+          pip install python-telegram-bot requests
+      - name: Run script
+        run: python send_tenders.py
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.GROUP_ID }}
