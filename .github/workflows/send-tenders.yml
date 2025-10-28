@@ -2,7 +2,7 @@ name: Send Daily Tenders
 
 on:
   schedule:
-    - cron: '0 5 * * *'
+    - cron: '0 * * * *'   # هر ساعت (UTC)
   workflow_dispatch:
 
 jobs:
@@ -16,7 +16,8 @@ jobs:
           python-version: 3.11
       - name: Install dependencies
         run: |
-          pip install python-telegram-bot requests schedule
+          python -m pip install --upgrade pip
+          pip install "python-telegram-bot==13.15" requests
       - name: Run script
         run: python send_tenders.py
         env:
